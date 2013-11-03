@@ -6,12 +6,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 
-import org.apache.log4j.Logger;
-
 public class Server implements Runnable {
 
-	final static Logger log = Logger.getLogger(Server.class);
-	
 	private Thread thread;
 	private ServerSocket server;
 	private Socket socket;
@@ -34,9 +30,7 @@ public class Server implements Runnable {
     public void start() { 
     	if (thread == null) { 
     		thread = new Thread(this);
-    		running = true;
-    		thread.start();
-        	log.info("Server thread started on port " + port);
+    		thread.start(); 
         } 
     } 
     
@@ -48,9 +42,10 @@ public class Server implements Runnable {
 				socket.close();
 			}
 			server.close();
-			log.info("Server stopped on port " + port);
+			System.out.println(">> Server stopped on port " + port);
 		} catch (IOException e) {
-			log.error("Badness occured while stopping the server: ", e);
+			System.out.println("\n>> Badness occured while stopping the server: ");
+			e.printStackTrace();
 		}
 	}
 	
@@ -58,13 +53,17 @@ public class Server implements Runnable {
 	public void run() {
 		try {
 			server = new ServerSocket(port);
+			running = true;
+			System.out.println(">> Server thread started on " + port);
 			while (running) {
 				socket = server.accept();
 				client = new Client(socket);				
 				client.start();			
-			} 
+			}
+		} catch (IllegalArgumentException e) {
+			System.out.println(">> Port out of range; try another");
 		} catch (BindException e) {
-			log.error("Port " + port + " already bound; choose another.");			
+			System.out.println(">> Port " + port + " bound by another process");			
 		} catch (SocketException e) {			
             /*
              * Don't need to do anything here. From Java doc:
@@ -73,7 +72,10 @@ public class Server implements Runnable {
              * 
              */
 		} catch (IOException e) {
-			log.error("Badness occured while running the server: ", e);
+			System.out.println("\n>> Badness occured while running the server\n");
+			e.printStackTrace();
+		} finally {
+			running = false;
 		}
 	}
 }

@@ -7,12 +7,8 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Scanner;
 
-import org.apache.log4j.Logger;
-
 public class Client implements Runnable {
 
-	final static Logger log = Logger.getLogger(Client.class);
-	
 	private Thread thread;
 	private Socket socket;
 	private InputStream iStream;
@@ -34,7 +30,7 @@ public class Client implements Runnable {
     		thread = new Thread(this); 
         	thread.start();
         	running = true;
-        	log.info("Client connected from " + socket.getLocalAddress().getHostName());
+        	System.out.println(">> " + thread.getName() + " (" + this.getClass().getSimpleName() +") | Client connected from " + socket.getLocalAddress().getHostName());
         } 
     } 
     
@@ -46,7 +42,8 @@ public class Client implements Runnable {
 			scanner.close();
 	    	printWriter.close();
 		} catch (IOException e) {
-			log.error("Badness closing I/O stream: ", e);
+			System.out.println("\n>> Badness occurred while closing I/O stream: ");
+			e.printStackTrace();
 		}
     }
 	
@@ -61,16 +58,16 @@ public class Client implements Runnable {
             while (running) {      
                 if (scanner.hasNext()) {
                     String line = scanner.nextLine();
-                    log.info("Room " + socket.getLocalPort() + " | Client Said: " + line);
+                    System.out.println(">> " + thread.getName() + " (" + this.getClass().getSimpleName() +") | Room " + socket.getLocalPort() + ", client sent: " + line);
                     printWriter.println("You Said: " + line);
                     printWriter.flush();
                 }
             }
 			
 		} catch (IOException e) {
-			log.error("Badness while reading socket stream: ", e);
-		}
-		
+			System.out.println("\n>> Badness occurred while reading socket stream: ");
+			e.printStackTrace();
+		}		
 	}
 
 }
