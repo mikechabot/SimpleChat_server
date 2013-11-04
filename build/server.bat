@@ -1,0 +1,1 @@
+java -jar server.jar sc start 9090
