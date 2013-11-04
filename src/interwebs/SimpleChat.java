@@ -25,7 +25,7 @@ public class SimpleChat {
 		if(servers.size() == 0) {
 			printUsage();
 		} else if (servers.size() == 1) {
-			System.out.println("\nType \"help\" to see SimpleChat usage commands");
+			System.out.println("\nType \"help\" to see SimpleChat usage commands\n");
 		}
 		
 		while(true) {		

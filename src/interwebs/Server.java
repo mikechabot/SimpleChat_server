@@ -91,7 +91,6 @@ public class Server implements Runnable {
 	}
 	
 	public void broadcast(int remotePort, String message) {
-		message = ">> User #" + remotePort + ": " + message;
 		if (clients != null && !clients.isEmpty()) {
 			for (Client temp : clients) {
 				if (temp.getRemotePort() != remotePort) {

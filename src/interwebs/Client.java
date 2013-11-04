@@ -5,10 +5,14 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Scanner;
 
 public class Client implements Runnable {
 
+	private final SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
+	
 	private Server server;
 	private Thread thread;
 	private Socket socket;
@@ -36,7 +40,7 @@ public class Client implements Runnable {
     		thread = new Thread(this); 
         	thread.start();
         	running = true;
-        	System.out.println(">> " + thread.getName() + " (" + this.getClass().getSimpleName() +") | Client connected from " + socket.getLocalAddress().getHostName() + " (" +socket.getPort() + "), binding to port " + socket.getLocalPort());
+        	System.out.println(">> "+ sdf.format(new Date()) + " | " + thread.getName() + " (" + this.getClass().getSimpleName() +") | Client connected from " + socket.getLocalAddress().getHostName() + " (" +socket.getPort() + "), binding to port " + socket.getLocalPort());
         } 
     } 
     
@@ -54,24 +58,25 @@ public class Client implements Runnable {
     }
     
     public void sendMessage(String message) {
-    	printWriter.println(">> Someone said: " + message);
+    	printWriter.println(message);
     	printWriter.flush();
     }
 	
 	@Override
-	public void run() {
+	public void run() {		
 		try {
 			iStream = socket.getInputStream();		// Read input stream from client
 			scanner = new Scanner(iStream);			// Read console text from input stream
 			oStream = socket.getOutputStream(); 	// Initiate output stream back to client
 			printWriter = new PrintWriter(oStream); // Send text back to client using output stream
-			
             while (running) {
             	if(scanner.hasNextLine()) {
-                    String message = scanner.nextLine();
-                    System.out.println(">> " + thread.getName() + " (" + this.getClass().getSimpleName() +") | Room " + socket.getLocalPort() + ", client sent: " + message);                    
+                    String message = scanner.nextLine();  
+                    String dateTime = sdf.format(new Date());
+                    System.out.println(">> " + dateTime + " | " + thread.getName() + " (" + this.getClass().getSimpleName() +") | Room " + socket.getLocalPort() + ", User #" + socket.getPort() + ": " + message);                   
+                    message = ">> " + dateTime + " | User #" + socket.getPort() + ": " + message;
+                    printWriter.println(message);
                     server.broadcast(socket.getPort(), message);
-                    printWriter.println(">> User #" + socket.getPort() + ": " + message);
                     printWriter.flush();
             	}           
             }
