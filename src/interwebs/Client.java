@@ -21,8 +21,8 @@ public class Client implements Runnable {
 	private Socket socket;
 	private InputStream iStream;
 	private OutputStream oStream;
-	private Scanner scanner;
-	private PrintWriter printWriter;
+	private Scanner console;
+	private PrintWriter toClient;
 	private boolean running;
 	
 	public Client(Server server, Socket socket) {
@@ -50,16 +50,16 @@ public class Client implements Runnable {
     	try {
 			iStream.close();
 			oStream.close();
-			scanner.close();
-	    	printWriter.close();
+			console.close();
+			toClient.close();
 		} catch (IOException e) {
 			log.error("\n>> Badness occurred while closing stream: ", e);
 		}
     }
     
     public void sendMessage(String message) {
-    	printWriter.println(message);
-    	printWriter.flush();
+    	toClient.println(message);
+    	toClient.flush();
     }
 	
 	@Override
@@ -68,15 +68,15 @@ public class Client implements Runnable {
 		log.info("Client connected from " + socket.getLocalAddress().getHostName() + " (" +socket.getPort() + "), binding to port " + socket.getLocalPort());
 		try {
 			iStream = socket.getInputStream();		// Read input stream from client
-			scanner = new Scanner(iStream);			// Read console text from input stream
+			console = new Scanner(iStream);			// Read text from input stream
 			oStream = socket.getOutputStream(); 	// Initiate output stream back to client
-			printWriter = new PrintWriter(oStream); // Send text back to client using output stream
+			toClient = new PrintWriter(oStream); 	// Send text back to client using output stream
+			sendMessage("\n** Joined Room #" + socket.getLocalPort() + " as User #" + socket.getPort() + " | Room Size: " + server.getClients().size() + " **");
             while (running) {
-            	if(scanner.hasNextLine()) {
-                    String message = scanner.nextLine();  
+            	if(console.hasNextLine()) {
+                    String message = console.nextLine();  
                     log.info("Room " + socket.getLocalPort() + ", User #" + socket.getPort() + ": " + message);
-                    server.broadcast(">> " + sdf.format(new Date()) + " | User #" + socket.getPort() + ": " + message);
-                    printWriter.flush();
+                    server.broadcast(">> " + sdf.format(new Date()) + " | User #" + socket.getPort() + ": " + message);                    
             	}           
             }            
 		} catch (IOException e) {

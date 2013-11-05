@@ -5,7 +5,9 @@ import java.net.BindException;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.log4j.Logger;
@@ -13,6 +15,7 @@ import org.apache.log4j.Logger;
 public class Server implements Runnable {
 
 	private static Logger log = Logger.getLogger(Server.class);
+	private final SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
 	
 	private ServerSocket server;
 	private List<Client> clients;
@@ -76,6 +79,7 @@ public class Server implements Runnable {
 				client = new Client(this, socket);				
 				client.start();
 				clients.add(client);
+				broadcast(socket.getPort(), ">> " + sdf.format(new Date()) + " | User #" + socket.getPort() + " joined the chat room");
 			}
 		} catch (IllegalArgumentException e) {
 			log.error("Port out of range; try another");
@@ -92,6 +96,16 @@ public class Server implements Runnable {
 			log.error("Badness occured while running the server", e);
 		} finally {
 			running = false;
+		}
+	}
+	
+	public void broadcast(int remotePort, String message) {
+		if (clients != null && !clients.isEmpty()) {
+			for (Client temp : clients) {
+				if(temp.getRemotePort() != remotePort) {
+					temp.sendMessage(message);
+				}			
+			}
 		}
 	}
 	
