@@ -96,7 +96,7 @@ public class Server implements Runnable {
 			log.error("Badness occured while running the server", e);
 		} finally {
 			running = false;
-		}
+		} 
 	}
 	
 	public void broadcast(int remotePort, String message) {

@@ -60,7 +60,7 @@ public class Client implements Runnable {
     public void sendMessage(String message) {
     	toClient.println(message);
     	toClient.flush();
-    }
+    } 
 	
 	@Override
 	public void run() {
