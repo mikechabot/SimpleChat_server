@@ -4,10 +4,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Scanner;
 
+import org.apache.log4j.Logger;
 import org.apache.regexp.RE;
 
 public class SimpleChat {
 	
+	private static Logger log = Logger.getLogger(SimpleChat.class);
 	private static Map<Integer, Server> servers = new HashMap<Integer, Server>(0);
 	
 	public SimpleChat() {
@@ -25,7 +27,7 @@ public class SimpleChat {
 		if(servers.size() == 0) {
 			printUsage();
 		} else if (servers.size() == 1) {
-			System.out.println("\nType \"help\" to see SimpleChat usage commands\n");
+			log.info("Type \"help\" to see SimpleChat usage commands");
 		}
 		
 		while(true) {		
@@ -43,15 +45,15 @@ public class SimpleChat {
 					stopServers();
 					break;
 				} else {
-					System.out.println(">> Unknown command. Type \"help\" to display to usage options");
+					log.info("Unknown command. Type \"help\" to display to usage options");
 				}
 			} catch (NumberFormatException e) {
-				System.out.println(">> Invalid port number; try another");
+				log.error("Invalid port number; try another");
 			}
 			
 		}
 		scanner.close();
-		System.out.println("\nExiting SimpleChat. Thanks for hosting!");
+		log.info("Exiting SimpleChat. Thanks for hosting!");
 	}
 	
 	public void executeCommand(String command, int port) {
@@ -68,7 +70,7 @@ public class SimpleChat {
 			if (!server.isRunning()) {
 				server.start();
 			} else {
-				System.out.println(">> Server already running on port " + port);
+				log.info("Server already running on port " + port);
 			}
 		} else if (command.equals("stop")) {
 			if (server.isRunning()) {
@@ -76,7 +78,7 @@ public class SimpleChat {
 				servers.remove(server.getPort());
 				server = null;
 			} else {
-				System.out.println(">> No server running on port " + port);
+				log.info("No server running on port " + port);
 			}
 		} 
 	}
@@ -84,7 +86,7 @@ public class SimpleChat {
 	public void printUsage() {
 		System.out.println("    Usage: sc [command] [port] [-l] [-x]");
 		System.out.println("    Options: ");
-		System.out.println("	[command]	Issue a command to start/stop a server");
+		System.out.println("	[command]	Issue command to start or stop a server");
 		System.out.println("	[port]		Port number of the server to be stopped or started");
 		System.out.println("	-l		List running servers");
 		System.out.println("	-x		Exit SimpleChat");
@@ -99,17 +101,17 @@ public class SimpleChat {
 	
 	private void printActiveServers() {
 		if(servers.size() > 0) {
-			System.out.println("\nRunning Servers");
-			System.out.println("#\tPort");
+			log.info("Running Servers");
+			log.info("#\tPort");
 			int i = 1;
 			for(Server server : servers.values()) {
 				if(server.isRunning()) {
-					System.out.println(i + "\t" + server.getPort());
+					log.info(i + "\t" + server.getPort());
+					i++;
 				}
-				i++;
 			}
 		} else {
-			System.out.println(">> There are no running servers. Type \"sc start [port]\" to start one.\n");
+			log.info("There are no running servers. Type \"sc start [port]\" to start one.");
 		}
 	}
 	
@@ -121,8 +123,7 @@ public class SimpleChat {
 		}
 	}
 	
-	public static void main(String[] args) {
-		
+	public static void main(String[] args) {		
 		SimpleChat simpleChat = null;
 		if (args != null && args.length > 0) {
 			simpleChat = new SimpleChat(args[1], Integer.parseInt(args[2]));

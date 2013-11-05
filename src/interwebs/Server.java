@@ -8,14 +8,18 @@ import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 public class Server implements Runnable {
 
-	private static List<Client> clients;
+	private static Logger log = Logger.getLogger(Server.class);
 	
-	private Thread thread;
 	private ServerSocket server;
-	private Socket socket;
+	private List<Client> clients;
 	private Client client;
+	private Socket socket;
+	private Thread thread;
+	
 	private int port;
 	boolean running;
 	
@@ -46,16 +50,18 @@ public class Server implements Runnable {
 	public void stop() {
 		running = false;
 		try {
+			if (!clients.isEmpty()) {
+				for(Client temp : clients) {
+					temp.stop();
+				}
+			}
 			if (socket != null) {
-				client.stop();
 				socket.close();
 			}
 			server.close();
-			clients.remove(client);
-			System.out.println(">> Server stopped on port " + port);
+			log.info("Server stopped on port " + port);
 		} catch (IOException e) {
-			System.out.println("\n>> Badness occured while stopping the server: ");
-			e.printStackTrace();
+			log.error("Badness occured while stopping the server: ", e);
 		}
 	}
 	
@@ -64,7 +70,7 @@ public class Server implements Runnable {
 		try {
 			server = new ServerSocket(port);
 			running = true;
-			System.out.println(">> Server thread started on port " + port);
+			log.info("Server thread started on port " + port);
 			while (running) {
 				socket = server.accept();
 				client = new Client(this, socket);				
@@ -72,9 +78,9 @@ public class Server implements Runnable {
 				clients.add(client);
 			}
 		} catch (IllegalArgumentException e) {
-			System.out.println(">> Port out of range; try another");
+			log.error("Port out of range; try another");
 		} catch (BindException e) {
-			System.out.println(">> Port " + port + " bound by another process");			
+			log.error("Port " + port + " bound by another process");			
 		} catch (SocketException e) {			
             /*
              * Don't need to do anything here. From Java doc:
@@ -83,21 +89,18 @@ public class Server implements Runnable {
              *                 
              */
 		} catch (IOException e) {
-			System.out.println("\n>> Badness occured while running the server\n");
-			e.printStackTrace();
+			log.error("Badness occured while running the server", e);
 		} finally {
 			running = false;
 		}
 	}
 	
-	public void broadcast(int remotePort, String message) {
+	public void broadcast(String message) {
 		if (clients != null && !clients.isEmpty()) {
 			for (Client temp : clients) {
-				if (temp.getRemotePort() != remotePort) {
-					temp.sendMessage(message);
-				}
+				temp.sendMessage(message);			
 			}
 		}
 	}
-	
+
 }

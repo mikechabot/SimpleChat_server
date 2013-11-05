@@ -9,8 +9,11 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Scanner;
 
+import org.apache.log4j.Logger;
+
 public class Client implements Runnable {
 
+	private static Logger log = Logger.getLogger(Client.class);
 	private final SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
 	
 	private Server server;
@@ -39,8 +42,6 @@ public class Client implements Runnable {
     	if (thread == null) { 
     		thread = new Thread(this); 
         	thread.start();
-        	running = true;
-        	System.out.println(">> "+ sdf.format(new Date()) + " | " + thread.getName() + " (" + this.getClass().getSimpleName() +") | Client connected from " + socket.getLocalAddress().getHostName() + " (" +socket.getPort() + "), binding to port " + socket.getLocalPort());
         } 
     } 
     
@@ -52,8 +53,7 @@ public class Client implements Runnable {
 			scanner.close();
 	    	printWriter.close();
 		} catch (IOException e) {
-			System.out.println("\n>> Badness occurred while closing stream: ");
-			e.printStackTrace();
+			log.error("\n>> Badness occurred while closing stream: ", e);
 		}
     }
     
@@ -63,7 +63,9 @@ public class Client implements Runnable {
     }
 	
 	@Override
-	public void run() {		
+	public void run() {
+		running = true;
+		log.info("Client connected from " + socket.getLocalAddress().getHostName() + " (" +socket.getPort() + "), binding to port " + socket.getLocalPort());
 		try {
 			iStream = socket.getInputStream();		// Read input stream from client
 			scanner = new Scanner(iStream);			// Read console text from input stream
@@ -72,18 +74,13 @@ public class Client implements Runnable {
             while (running) {
             	if(scanner.hasNextLine()) {
                     String message = scanner.nextLine();  
-                    String dateTime = sdf.format(new Date());
-                    System.out.println(">> " + dateTime + " | " + thread.getName() + " (" + this.getClass().getSimpleName() +") | Room " + socket.getLocalPort() + ", User #" + socket.getPort() + ": " + message);                   
-                    message = ">> " + dateTime + " | User #" + socket.getPort() + ": " + message;
-                    printWriter.println(message);
-                    server.broadcast(socket.getPort(), message);
+                    log.info("Room " + socket.getLocalPort() + ", User #" + socket.getPort() + ": " + message);
+                    server.broadcast(">> " + sdf.format(new Date()) + " | User #" + socket.getPort() + ": " + message);
                     printWriter.flush();
             	}           
-            }
-            
+            }            
 		} catch (IOException e) {
-			System.out.println("\n>> Badness occurred while reading client socket stream: ");
-			e.printStackTrace();
+			log.error("\n>> Badness occurred while reading client socket stream: ", e);
 		}		
 	}
 
