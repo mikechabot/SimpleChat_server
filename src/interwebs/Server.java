@@ -6,19 +6,19 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 import org.apache.log4j.Logger;
 
 public class Server implements Runnable {
-
+	
 	private static Logger log = Logger.getLogger(Server.class);
 	private final SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy HH:mm:ss");
 	
 	private ServerSocket server;
-	private List<Client> clients;
+	private ConcurrentMap<Integer, Client> clients;
 	private Client client;
 	private Socket socket;
 	private Thread thread;
@@ -28,7 +28,7 @@ public class Server implements Runnable {
 	
 	public Server(int port) {
 		this.port = port;
-		clients = new ArrayList<Client>(0);
+		clients = new ConcurrentHashMap<Integer, Client>(0);
 	}
 	
 	public int getPort() {
@@ -39,8 +39,12 @@ public class Server implements Runnable {
 		return running;
 	}
 	
-	public List<Client> getClients() {
+	public ConcurrentMap<Integer, Client> getClients() {
 		return clients;
+	}
+	
+	public void removeClient(int port) {
+		clients.remove(port);
 	}
 	
     public void start() { 
@@ -54,7 +58,7 @@ public class Server implements Runnable {
 		running = false;
 		try {
 			if (!clients.isEmpty()) {
-				for(Client temp : clients) {
+				for(Client temp : clients.values()) {
 					temp.stop();
 				}
 			}
@@ -73,19 +77,19 @@ public class Server implements Runnable {
 		try {
 			server = new ServerSocket(port);
 			running = true;
-			log.info("Server thread started on port " + port);
+			log.info("Binding server thread to port " + port);
 			while (running) {
-				socket = server.accept();
+				socket = server.accept(); 
 				client = new Client(this, socket);				
 				client.start();
-				clients.add(client);
+				clients.put(socket.getPort(), client);
 				broadcast(socket.getPort(), ">> " + sdf.format(new Date()) + " | User #" + socket.getPort() + " joined the chat room");
 			}
 		} catch (IllegalArgumentException e) {
 			log.error("Port out of range; try another");
 		} catch (BindException e) {
 			log.error("Port " + port + " bound by another process");			
-		} catch (SocketException e) {			
+		//} catch (SocketException e) {			
             /*
              * Don't need to do anything here. From Java doc:
              *  "Class ServerSocket (close): Closes this socket. Any thread currently 
@@ -99,19 +103,21 @@ public class Server implements Runnable {
 		} 
 	}
 	
+	// Send message to all clients, except for the sender
 	public void broadcast(int remotePort, String message) {
 		if (clients != null && !clients.isEmpty()) {
-			for (Client temp : clients) {
-				if(temp.getRemotePort() != remotePort) {
+			for (Client temp : clients.values()) {
+				if(temp.getPort() != remotePort) {
 					temp.sendMessage(message);
 				}			
 			}
 		}
 	}
 	
+	// Send message to all clients
 	public void broadcast(String message) {
 		if (clients != null && !clients.isEmpty()) {
-			for (Client temp : clients) {
+			for (Client temp : clients.values()) {
 				temp.sendMessage(message);			
 			}
 		}
