@@ -89,7 +89,7 @@ public class Server implements Runnable {
 			log.error("Port out of range; try another");
 		} catch (BindException e) {
 			log.error("Port " + port + " bound by another process");			
-		//} catch (SocketException e) {			
+		} catch (SocketException e) {			
             /*
              * Don't need to do anything here. From Java doc:
              *  "Class ServerSocket (close): Closes this socket. Any thread currently 
