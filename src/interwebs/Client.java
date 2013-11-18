@@ -82,6 +82,7 @@ public class Client implements Runnable {
 			console = new Scanner(socket.getInputStream());			// Read text from input stream
 			toClient = new PrintWriter(socket.getOutputStream()); 	// Send text back to client using output stream
 			sendMessage("\n** Joined Room #" + socket.getLocalPort() + " as User #" + socket.getPort() + " | Room Size: " + server.getClients().size() + " **");
+			sendMessage("(type \"\\leave\" to exit the chat room)");
             while (running) {
             	if(console.hasNextLine()) {
             		processClientMessage(console.nextLine());
